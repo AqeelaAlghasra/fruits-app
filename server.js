@@ -5,6 +5,7 @@ require('./config/database.js')
 
 const express = require('express');
 const methodOverride = require("method-override"); // new
+const path = require("path");
 const morgan = require('morgan');
 const Fruit =require('./models/fruit.js')
 const app = express();
@@ -14,6 +15,7 @@ const app = express();
 // MIDDLEWARE
 
 app.use(methodOverride("_method"));
+app.use(express.static(path.join(__dirname, "public")));
 app.use(morgan('dev'));
 app.use(express.urlencoded({ extended: false }));
 // ROUTES
@@ -52,6 +54,14 @@ app.delete("/fruits/:fruitId", async (req,res)=>{
     
 
   })
+
+
+app.get("/fruits/:fruitId/edit", async (req,res)=>{
+    const foundFruit = await Fruit.findById(req.params.fruitId);
+    res.render("fruits/edit.ejs", {fruit:foundFruit});
+  })
+
+
 // server.js
 
 // POST /fruits
@@ -63,6 +73,16 @@ app.post("/fruits", async (req, res) => {
   }
   await Fruit.create(req.body);
   res.redirect("/fruits");
+});
+app.put("/fruits/:fruitId", async (req, res) => {
+  if (req.body.isReadyToEat === "on") {
+    req.body.isReadyToEat = true;
+  } else {
+    req.body.isReadyToEat = false;
+  }
+  const fruitId = req.params.fruitId;
+  await Fruit.findByIdAndUpdate(fruitId,req.body);
+  res.redirect(`/fruits/${fruitId}`);
 });
 
 
